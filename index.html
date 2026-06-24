@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moonlighting — Drew</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f4f0;--surface:#fff;--surface2:#f8f8f5;--border:#eceae4;
+  --text:#1a1a18;--text2:#888;--text3:#bbb;
+  --green:#2e7d32;--green-bg:#e8f5e9;--green-border:#c8e6c9;
+  --blue:#1565c0;--blue-bg:#e3f2fd;--blue-border:#bbdefb;
+  --purple:#6a1b9a;--purple-bg:#f3e5f5;--purple-border:#e1bee7;
+  --red:#c62828;--amber:#f57f17;
+  --radius:14px;--radius-sm:8px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:1.5rem 1rem}
+.wrap{max-width:600px;margin:0 auto}
+
+/* Header */
+.header{margin-bottom:1.5rem}
+.header h1{font-size:26px;font-weight:700;letter-spacing:-.5px;margin-bottom:2px}
+.header p{font-size:13px;color:var(--text2)}
+
+/* Month nav */
+.month-nav{display:flex;align-items:center;gap:8px;margin-bottom:1.25rem;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:6px}
+.month-btn{flex:1;font-size:13px;font-weight:500;padding:8px 4px;border-radius:var(--radius-sm);border:none;background:none;cursor:pointer;color:var(--text2);transition:all .15s;text-align:center}
+.month-btn:hover{background:var(--surface2);color:var(--text)}
+.month-btn.active{background:var(--text);color:#fff}
+.month-btn.empty{color:var(--text3);cursor:default}
+.month-btn.empty:hover{background:none;color:var(--text3)}
+
+/* Cards */
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:1.25rem;margin-bottom:.875rem}
+.card-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1rem}
+.card-title{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}
+.card-sub{font-size:12px;color:var(--text2)}
+
+/* Stats row */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:var(--surface2);border-radius:var(--radius-sm);padding:12px 8px;text-align:center}
+.stat-n{font-size:22px;font-weight:700;line-height:1}
+.stat-n.g{color:var(--green)}
+.stat-n.b{color:var(--text3)}
+.stat-l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+
+/* Day rows */
+.day-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.day-row:last-child{border-bottom:none}
+.day-left{display:flex;align-items:center;gap:12px}
+.day-date{font-size:15px;font-weight:600;min-width:54px}
+.day-dow{font-size:12px;color:var(--text3)}
+.day-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.pills{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.pill{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.p1{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.p2{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.p3{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
+.day-pay{font-size:11px;color:var(--text2)}
+.empty-state{text-align:center;padding:1.5rem 0;color:var(--text3);font-size:14px}
+
+/* Earnings */
+.earn-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.earn-card{background:var(--surface2);border-radius:var(--radius-sm);padding:14px}
+.earn-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.earn-amount{font-size:22px;font-weight:700;color:var(--green);margin-bottom:2px}
+.earn-desc{font-size:11px;color:var(--text2);line-height:1.5}
+.earn-divider{border:none;border-top:1px solid var(--border);margin:12px 0}
+.earn-note{font-size:12px;color:var(--text2);line-height:1.6}
+
+/* Rules */
+.rule{display:flex;gap:10px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);color:var(--text2);line-height:1.5;align-items:flex-start}
+.rule:last-child{border-bottom:none}
+.rule-icon{min-width:14px;margin-top:1px}
+
+/* Loader */
+.loader{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text2);font-size:14px;padding:2rem}
+.spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--text2);border-radius:50%;animation:sp .65s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+.err{font-size:13px;color:var(--red);line-height:1.7;padding:.5rem 0}
+
+/* Footer */
+.footer{display:flex;justify-content:space-between;align-items:center;margin-top:.75rem;padding:0 2px}
+.footer-time{font-size:11px;color:var(--text3)}
+.refresh{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.refresh:hover{color:var(--text2)}
+
+/* No schedule */
+.no-schedule{text-align:center;padding:2rem 1rem;color:var(--text3)}
+.no-schedule p{font-size:14px;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>Moonlighting</h1>
+    <p>Stanford EM · Available shifts based on your schedule</p>
+  </div>
+
+  <div id="month-nav" class="month-nav" style="display:none"></div>
+  <div id="root"><div class="loader"><div class="spin"></div>Fetching your schedule…</div></div>
+
+  <div class="footer">
+    <span class="footer-time" id="updated"></span>
+    <button class="refresh" onclick="init()">↺ refresh</button>
+  </div>
+</div>
+
+<script>
+const GAP = 9;
+const SWING_PAY = 1200;
+const ON_PAY = 3500;
+
+const MOON = [
+  {id:'s1', label:'Swing 1  3–9 pm',  startH:15, endH:21, hrs:6,  cls:'p1', pay:SWING_PAY},
+  {id:'s2', label:'Swing 2  5–11 pm', startH:17, endH:23, hrs:6,  cls:'p2', pay:SWING_PAY},
+  {id:'on', label:'Overnight  7p–7a', startH:19, endH:31, hrs:12, cls:'p3', pay:ON_PAY},
+];
+
+const MN  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MS  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DN  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+let allShifts = [];
+let viewMonth = new Date().getMonth();
+let viewYear  = new Date().getFullYear();
+
+function dn(yr,mo,dy){ return Math.floor(new Date(yr,mo,dy)/86400000); }
+
+function parseIcal(text){
+  const shifts=[];
+  const unfolded=text.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,'');
+  unfolded.split('BEGIN:VEVENT').slice(1).forEach(b=>{
+    const get=k=>{const m=b.match(new RegExp(k+'[^:;]*(?:;[^:]*)?:([^\\r\\n]+)'));return m?m[1].trim():'';};
+    const dtstart=get('DTSTART'), dtend=get('DTEND');
+    const name=(get('SUMMARY')||'').replace(/\\,/g,',').replace(/\\n/g,' ').trim();
+    if(!dtstart||!name)return;
+    const parseDT=s=>{
+      const c=s.replace(/[-:]/g,'');
+      const yr=+c.slice(0,4),mo=+c.slice(4,6)-1,dy=+c.slice(6,8);
+      let hr=0;
+      if(c.length>8){const tIdx=c.indexOf('T');if(tIdx>=0)hr=+c.slice(tIdx+1,tIdx+3)||0;}
+      return{yr,mo,dy,hr};
+    };
+    const s=parseDT(dtstart), e=dtend?parseDT(dtend):null;
+    let endH=e?(e.dy>s.dy?e.hr+24:(e.hr===0&&e.dy===s.dy?24:e.hr)):s.hr+9;
+    if(endH===0)endH=24;
+    shifts.push({name,yr:s.yr,mo:s.mo,dy:s.dy,startH:s.hr,endH,night:s.hr>=22||(e&&e.dy>s.dy),dn:dn(s.yr,s.mo,s.dy)});
+  });
+  return shifts;
+}
+
+function computeMonth(shifts,yr,mo){
+  const dim=new Date(yr,mo+1,0).getDate();
+  const out=[];
+  for(let d=1;d<=dim;d++){
+    const dow=new Date(yr,mo,d).getDay();
+    const dayN=dn(yr,mo,d);
+    const hasEM=shifts.some(s=>s.dn===dayN);
+    const isTue=dow===2;
+    const inSICU=[0,1,2,3].some(b=>shifts.some(s=>s.dn===dayN-b&&/sicu|icu/i.test(s.name)));
+    if(hasEM||isTue||inSICU){out.push({d,dow,hasEM,isTue,inSICU,avail:[]});continue;}
+    const avail=[];
+    for(const ms of MOON){
+      const mS=dayN*24+ms.startH, mE=dayN*24+ms.endH;
+      let ok=true;
+      for(const em of shifts){
+        const eS=em.dn*24+em.startH, eE=em.dn*24+em.endH;
+        // After EM: need GAP hours between em end and moon start
+        if(mS < eE+GAP && mS >= eS){ ok=false; break; }
+        // Before EM: need GAP hours between moon end and em start
+        if(mE > eS-GAP && mE <= eS+ms.hrs+1){ ok=false; break; }
+      }
+      if(ok)avail.push(ms);
+    }
+    out.push({d,dow,hasEM:false,isTue:false,inSICU:false,avail});
+  }
+  return out;
+}
+
+function getAvailableMonths(){
+  const months=new Set();
+  allShifts.forEach(s=>months.add(`${s.yr}-${s.mo}`));
+  // Always include current + next 2 months
+  const now=new Date();
+  for(let i=0;i<3;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()+i,1);
+    months.add(`${d.getFullYear()}-${d.getMonth()}`);
+  }
+  return [...months].sort().map(k=>{const[y,m]=k.split('-');return{yr:+y,mo:+m};});
+}
+
+function renderMonthNav(){
+  const months=getAvailableMonths();
+  const nav=document.getElementById('month-nav');
+  nav.style.display='flex';
+  nav.innerHTML=months.map(({yr,mo})=>{
+    const hasData=allShifts.some(s=>s.yr===yr&&s.mo===mo);
+    const isActive=yr===viewYear&&mo===viewMonth;
+    const cls=isActive?'active':hasData?'':'empty';
+    return `<button class="month-btn ${cls}" onclick="setMonth(${yr},${mo})">${MS[mo]}</button>`;
+  }).join('');
+}
+
+function setMonth(yr,mo){
+  viewYear=yr; viewMonth=mo;
+  renderMonthNav();
+  renderContent();
+}
+
+function renderContent(){
+  const yr=viewYear, mo=viewMonth;
+  const monthShifts=allShifts.filter(s=>s.yr===yr&&s.mo===mo);
+  const days=computeMonth(allShifts,yr,mo);
+  const openDays=days.filter(d=>d.avail.length>0);
+  const hasSchedule=allShifts.some(s=>s.yr===yr&&s.mo===mo);
+
+  // Max possible earnings (take highest paying shift each open day)
+  const maxEarn=openDays.reduce((sum,d)=>{
+    const best=d.avail.reduce((mx,ms)=>ms.pay>mx?ms.pay:mx,0);
+    return sum+best;
+  },0);
+
+  // Realistic: assume 2 overnight + 2 swing per month from open days
+  const overnightDays=openDays.filter(d=>d.avail.some(ms=>ms.id==='on'));
+  const swingDays=openDays.filter(d=>d.avail.some(ms=>ms.id==='s1'||ms.id==='s2'));
+  const realON=Math.min(2,overnightDays.length);
+  const realSwing=Math.min(2,swingDays.length);
+  const realisticEarn=realON*ON_PAY + realSwing*SWING_PAY;
+
+  let html='';
+
+  // Stats
+  html+=`<div class="card">
+    <div class="card-header"><span class="card-title">${MN[mo]} ${yr}</span><span class="card-sub">${monthShifts.length} EM shifts scheduled</span></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n g">${openDays.length}</div><div class="stat-l">Open days</div></div>
+      <div class="stat"><div class="stat-n b">${overnightDays.length}</div><div class="stat-l">Overnight ok</div></div>
+      <div class="stat"><div class="stat-n b">${swingDays.length}</div><div class="stat-l">Swing ok</div></div>
+      <div class="stat"><div class="stat-n b">79</div><div class="stat-l">Hr cap</div></div>
+    </div>
+  </div>`;
+
+  // Available shifts
+  html+=`<div class="card">
+    <div class="card-header"><span class="card-title">Shifts to request</span></div>`;
+  if(!hasSchedule){
+    html+=`<div class="no-schedule"><div style="font-size:28px">📅</div><p>Schedule not yet available for ${MN[mo]}</p></div>`;
+  } else if(!openDays.length){
+    html+=`<div class="empty-state">No open moonlighting days this month</div>`;
+  } else {
+    openDays.forEach(({d,dow,avail})=>{
+      const bestPay=avail.reduce((mx,ms)=>ms.pay>mx?ms.pay:mx,0);
+      html+=`<div class="day-row">
+        <div class="day-left">
+          <div>
+            <div class="day-date">${MS[mo]} ${d}</div>
+            <div class="day-dow">${DN[dow]}</div>
+          </div>
+        </div>
+        <div class="day-right">
+          <div class="pills">${avail.map(ms=>`<span class="pill ${ms.cls}">${ms.label}</span>`).join('')}</div>
+          <div class="day-pay">up to $${bestPay.toLocaleString()}</div>
+        </div>
+      </div>`;
+    });
+  }
+  html+=`</div>`;
+
+  // Earnings
+  if(hasSchedule && openDays.length>0){
+    html+=`<div class="card">
+      <div class="card-header"><span class="card-title">Earnings potential</span></div>
+      <div class="earn-grid">
+        <div class="earn-card">
+          <div class="earn-label">Maximum possible</div>
+          <div class="earn-amount">$${maxEarn.toLocaleString()}</div>
+          <div class="earn-desc">If you took the highest-paying shift on every open day</div>
+        </div>
+        <div class="earn-card">
+          <div class="earn-label">Realistic estimate</div>
+          <div class="earn-amount">$${realisticEarn.toLocaleString()}</div>
+          <div class="earn-desc">${realON} overnight${realON!==1?'s':''} + ${realSwing} swing shift${realSwing!==1?'s':''}</div>
+        </div>
+      </div>
+      <hr class="earn-divider">
+      <div class="earn-note">
+        💰 Swing 1 &amp; 2: <strong>$1,200/shift</strong> &nbsp;·&nbsp; Overnight: <strong>$3,500/shift</strong><br>
+        ⚠️ Max 24 hrs/week · 79 hrs/month cap applies
+      </div>
+    </div>`;
+  }
+
+  // Rules
+  html+=`<div class="card">
+    <div class="card-header"><span class="card-title">Rules applied</span></div>
+    <div class="rule"><span class="rule-icon" style="color:var(--red)">✕</span>No same-day moonlighting</div>
+    <div class="rule"><span class="rule-icon" style="color:var(--red)">✕</span>9-hour gap before <em>and</em> after every EM shift — overnight (ends 7am) blocked if next EM starts before 4pm</div>
+    <div class="rule"><span class="rule-icon" style="color:var(--red)">✕</span>No Tuesday evening moonlighting</div>
+    <div class="rule"><span class="rule-icon" style="color:var(--red)">✕</span>SICU/ICU block = no moonlighting for 4 days</div>
+    <div class="rule"><span class="rule-icon" style="color:var(--amber)">⚠</span>Max 24 hrs/week · 79 hrs/month including external consulting</div>
+    <div class="rule"><span class="rule-icon" style="color:var(--green)">✓</span>Swing 1: 3–9 pm · Swing 2: 5–11 pm · Overnight: 7 pm–7 am</div>
+  </div>`;
+
+  document.getElementById('root').innerHTML=html;
+}
+
+async function init(){
+  document.getElementById('root').innerHTML='<div class="loader"><div class="spin"></div>Fetching your schedule…</div>';
+  document.getElementById('month-nav').style.display='none';
+  try{
+    const r=await fetch('/api/schedule',{signal:AbortSignal.timeout(10000)});
+    if(!r.ok) throw new Error(`Server error ${r.status}`);
+    const text=await r.text();
+    if(!text.includes('BEGIN:VCALENDAR')) throw new Error('Unexpected response: '+text.slice(0,200));
+    allShifts=parseIcal(text);
+    const now=new Date();
+    viewYear=now.getFullYear(); viewMonth=now.getMonth();
+    renderMonthNav();
+    renderContent();
+    document.getElementById('updated').textContent=`Updated ${now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+  }catch(e){
+    document.getElementById('root').innerHTML=`<div class="card"><div class="err">${e.message}</div></div>`;
+  }
+}
+init();
+</script>
+</body>
+</html>
