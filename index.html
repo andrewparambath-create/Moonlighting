@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moonlighting — Drew</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f4f0;--surface:#fff;--surface2:#f8f8f5;--border:#eceae4;
+  --text:#1a1a18;--text2:#777;--text3:#bbb;
+  --green:#2e7d32;--green-bg:#e8f5e9;--green-border:#a5d6a7;
+  --blue:#1565c0;--blue-bg:#e3f2fd;--blue-border:#90caf9;
+  --purple:#6a1b9a;--purple-bg:#f3e5f5;--purple-border:#ce93d8;
+  --red:#c62828;--red-bg:#ffebee;--amber:#f57f17;--amber-bg:#fff8e1;
+  --radius:14px;--radius-sm:8px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:1.5rem 1rem 6rem}
+.wrap{max-width:700px;margin:0 auto}
+.header{margin-bottom:1.25rem}
+.header h1{font-size:26px;font-weight:700;letter-spacing:-.5px;margin-bottom:2px}
+.header p{font-size:13px;color:var(--text2)}
+
+.month-nav{display:flex;gap:4px;margin-bottom:1.25rem;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:5px;flex-wrap:wrap}
+.month-btn{flex:1;min-width:52px;font-size:12px;font-weight:500;padding:7px 4px;border-radius:var(--radius-sm);border:none;background:none;cursor:pointer;color:var(--text2);transition:all .15s;text-align:center}
+.month-btn:hover{background:var(--surface2);color:var(--text)}
+.month-btn.active{background:var(--text);color:#fff}
+.month-btn.empty{color:var(--text3);cursor:default}
+.month-btn.empty:hover{background:none}
+
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:1.25rem;margin-bottom:.875rem}
+.card-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1rem}
+.card-title{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}
+.card-sub{font-size:12px;color:var(--text2)}
+.card-sub.sel{color:var(--green);font-weight:600}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:var(--surface2);border-radius:var(--radius-sm);padding:12px 8px;text-align:center}
+.stat-n{font-size:22px;font-weight:700;line-height:1}
+.stat-n.g{color:var(--green)}.stat-n.b{color:var(--text3)}
+.stat-l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+
+/* Rotation banner */
+.rotation-banner{border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:.875rem;font-size:13px;display:flex;align-items:center;gap:8px}
+.rotation-banner.vacation{background:#fff8e1;border:1px solid #ffe082;color:#5d4037}
+.rotation-banner.jeopardy{background:#ffebee;border:1px solid #ef9a9a;color:var(--red)}
+.rotation-banner.cvicu{background:#fce4ec;border:1px solid #f48fb1;color:#880e4f}
+.rotation-banner.kaiser{background:#e8eaf6;border:1px solid #9fa8da;color:#283593}
+.rotation-banner.elect{background:#f3e5f5;border:1px solid #ce93d8;color:var(--purple)}
+.rotation-banner.kned{background:#fbe9e7;border:1px solid #ffab91;color:#bf360c}
+.rotation-banner.normal{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green)}
+.banner-icon{font-size:16px}
+.banner-text strong{display:block;font-size:13px}
+.banner-text span{font-size:12px;opacity:.8}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.875rem}
+@media(max-width:540px){.two-col{grid-template-columns:1fr}}
+.col-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:1rem}
+.col-title{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:center}
+
+.sched-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);gap:8px}
+.sched-row:last-child{border-bottom:none}
+.sched-date{font-size:13px;font-weight:600;min-width:50px}
+.sched-dow{font-size:10px;color:var(--text3);margin-top:1px}
+.sched-right{text-align:right}
+.sched-name{font-size:11px;color:var(--text2);line-height:1.4}
+.sched-time{font-size:10px;color:var(--text3)}
+
+.moon-row{padding:8px 0;border-bottom:1px solid var(--border)}
+.moon-row:last-child{border-bottom:none}
+.moon-row.dim{opacity:.4}
+.moon-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px}
+.moon-date{font-size:13px;font-weight:600}
+.moon-dow{font-size:10px;color:var(--text3);margin-top:1px}
+.moon-pay{font-size:11px;color:var(--text3)}
+.moon-pay.sel{color:var(--green);font-weight:600}
+.pills-row{display:flex;gap:5px;flex-wrap:wrap}
+.block-reason{font-size:10px;color:var(--text3);font-style:italic;margin-top:3px}
+
+.shift-pill{font-size:11px;font-weight:500;padding:5px 10px;border-radius:20px;cursor:pointer;transition:all .15s;border:2px solid transparent;user-select:none;white-space:nowrap}
+.shift-pill:hover:not(.disabled){transform:scale(1.05)}
+.shift-pill.disabled{cursor:not-allowed;opacity:.35}
+.sp-s1{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.sp-s2{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border)}
+.sp-on{background:var(--purple-bg);color:var(--purple);border-color:var(--purple-border)}
+.sp-s1.sel{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 2px 8px rgba(46,125,50,.3)}
+.sp-s2.sel{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(21,101,192,.3)}
+.sp-on.sel{background:var(--purple);color:#fff;border-color:var(--purple);box-shadow:0 2px 8px rgba(106,27,154,.3)}
+
+.earn-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.earn-card{background:var(--surface2);border-radius:var(--radius-sm);padding:14px}
+.earn-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.earn-amount{font-size:22px;font-weight:700;color:var(--green);margin-bottom:2px}
+.earn-desc{font-size:11px;color:var(--text2);line-height:1.5}
+.earn-divider{border:none;border-top:1px solid var(--border);margin:12px 0}
+.earn-note{font-size:12px;color:var(--text2);line-height:1.9}
+
+.rule{display:flex;gap:10px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);color:var(--text2);line-height:1.5;align-items:flex-start}
+.rule:last-child{border-bottom:none}
+
+.bottom-bar{position:fixed;bottom:-80px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 1.25rem;z-index:100;transition:bottom .2s ease;box-shadow:0 -4px 20px rgba(0,0,0,.08)}
+.bottom-bar.visible{bottom:0}
+.bottom-inner{max-width:700px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bar-count{font-size:12px;color:var(--text2);margin-bottom:2px}
+.bar-earn{font-size:20px;font-weight:700;color:var(--green)}
+.bar-actions{display:flex;gap:8px}
+.btn{font-size:13px;font-weight:500;padding:10px 18px;border-radius:var(--radius-sm);border:none;cursor:pointer;white-space:nowrap;transition:all .15s}
+.btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--border)}
+.btn-primary{background:var(--green);color:#fff}
+.btn-primary:hover{background:#1b5e20}
+
+.cal-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.cal-item:last-child{border-bottom:none}
+.cal-date{font-size:14px;font-weight:600}
+.cal-shift{font-size:12px;color:var(--text2);margin-top:2px}
+.cal-right{display:flex;align-items:center;gap:10px}
+.cal-pay{font-size:14px;font-weight:600;color:var(--green)}
+.add-btn{font-size:12px;font-weight:500;padding:7px 14px;border-radius:6px;background:var(--green);color:#fff;text-decoration:none;white-space:nowrap}
+.cal-total{display:flex;justify-content:space-between;align-items:center;padding-top:1rem;margin-top:.5rem;border-top:1px solid var(--border)}
+
+.empty-state{text-align:center;padding:1.5rem 0;color:var(--text3);font-size:13px}
+.loader{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text2);font-size:14px;padding:3rem}
+.spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--text2);border-radius:50%;animation:sp .65s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+.err{font-size:13px;color:var(--red);line-height:1.7;padding:.5rem 0}
+.footer{display:flex;justify-content:space-between;align-items:center;margin-top:.75rem;padding:0 2px}
+.footer-time{font-size:11px;color:var(--text3)}
+.refresh{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>Moonlighting</h1>
+    <p>Stanford EM · Drew Parambath · Tap a shift pill to select · Submit to add to calendar</p>
+  </div>
+  <div id="month-nav" class="month-nav" style="display:none"></div>
+  <div id="root"><div class="loader"><div class="spin"></div>Fetching your schedule…</div></div>
+  <div class="footer">
+    <span class="footer-time" id="updated"></span>
+    <button class="refresh" onclick="init()">↺ refresh</button>
+  </div>
+</div>
+
+<div class="bottom-bar" id="bottom-bar">
+  <div class="bottom-inner">
+    <div>
+      <div class="bar-count" id="bar-count">0 shifts selected</div>
+      <div class="bar-earn" id="bar-earn">$0</div>
+    </div>
+    <div class="bar-actions">
+      <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
+      <button class="btn btn-primary" onclick="submitToCalendar()">📅 Add to Calendar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const GAP=9, SWING_PAY=1200, ON_PAY=3500;
+const MOON=[
+  {id:'s1',label:'Swing 1  3–9p', startH:15,endH:21,hrs:6,  cls:'sp-s1',pay:SWING_PAY},
+  {id:'s2',label:'Swing 2  5–11p',startH:17,endH:23,hrs:6,  cls:'sp-s2',pay:SWING_PAY},
+  {id:'on',label:'Overnight 7p–7a',startH:19,endH:31,hrs:12,cls:'sp-on',pay:ON_PAY},
+];
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+// ── Master rotation schedule for Andrew ──────────────────────────────────────
+// Each entry: [weekStartISO, weekEndISO, rotation]
+const ROTATION_SCHEDULE = [
+  ['2026-06-22','2026-06-28','SVED'],
+  ['2026-06-29','2026-07-05','SVED'],
+  ['2026-07-06','2026-07-12','Vacation'],
+  ['2026-07-13','2026-07-19','SVED'],
+  ['2026-07-20','2026-07-26','SNED'],
+  ['2026-07-27','2026-08-02','SVED'],
+  ['2026-08-03','2026-08-09','SVED'],
+  ['2026-08-10','2026-08-16','SVED'],
+  ['2026-08-17','2026-08-23','Kaiser FT'],
+  ['2026-08-24','2026-08-30','Kaiser FT'],
+  ['2026-08-31','2026-09-06','SVED'],
+  ['2026-09-07','2026-09-13','H. Elect'],
+  ['2026-09-14','2026-09-20','H. Elect'],
+  ['2026-09-21','2026-09-27','SVED'],
+  ['2026-09-28','2026-10-04','SVED'],
+  ['2026-10-05','2026-10-11','SVED'],
+  ['2026-10-12','2026-10-18','SVED'],
+  ['2026-10-19','2026-10-25','SNED'],
+  ['2026-10-26','2026-11-01','SVED'],
+  ['2026-11-02','2026-11-08','Vacation'],
+  ['2026-11-09','2026-11-15','KED'],
+  ['2026-11-16','2026-11-22','KED'],
+  ['2026-11-23','2026-11-29','SVED'],
+  ['2026-11-30','2026-12-06','SVED'],
+  ['2026-12-07','2026-12-13','SNED'],
+  ['2026-12-14','2026-12-20','SVED'],
+  ['2026-12-21','2026-12-27','SVED'],
+  ['2026-12-28','2027-01-03','SVED'],
+  ['2027-01-04','2027-01-10','CVICU'],
+  ['2027-01-11','2027-01-17','CVICU'],
+  ['2027-01-18','2027-01-24','Vacation'],
+  ['2027-01-25','2027-01-31','SVED'],
+  ['2027-02-01','2027-02-07','SVED'],
+  ['2027-02-08','2027-02-14','SVED'],
+  ['2027-02-15','2027-02-21','SVED'],
+  ['2027-02-22','2027-02-28','SVED'],
+  ['2027-03-01','2027-03-07','Vacation'],
+  ['2027-03-08','2027-03-14','SVED'],
+  ['2027-03-15','2027-03-21','SVED'],
+  ['2027-03-22','2027-03-28','SVED'],
+  ['2027-03-29','2027-04-04','H. Elect'],
+  ['2027-04-05','2027-04-11','H. Elect'],
+  ['2027-04-12','2027-04-18','SVED'],
+  ['2027-04-19','2027-04-25','SVED'],
+  ['2027-04-26','2027-05-02','KNED'],
+  ['2027-05-03','2027-05-09','KED'],
+  ['2027-05-10','2027-05-16','KED'],
+  ['2027-05-17','2027-05-23','KED'],
+  ['2027-05-24','2027-05-30','A. Elect'],
+  ['2027-05-31','2027-06-06','A. Elect'],
+  ['2027-06-07','2027-06-13','A. Elect'],
+  ['2027-06-14','2027-06-20','A. Elect'],
+];
+
+// Jeopardy periods — no moonlighting
+const JEOPARDY_PERIODS = [
+  ['2026-08-17','2026-08-30'],
+  ['2026-09-07','2026-09-20'],
+  ['2027-03-29','2027-04-11'],
+];
+
+// Rotation type metadata
+const ROTATION_META = {
+  'Vacation':  {icon:'🏖',label:'Vacation week',     cls:'vacation', noMoon:true,  note:'No internal moonlighting on vacation'},
+  'CVICU':     {icon:'🫀',label:'CVICU rotation',    cls:'cvicu',    noMoon:true,  note:'ICU rotation — moonlighting blocked (4-day SICU rule)'},
+  'Kaiser FT': {icon:'🏥',label:'Kaiser Full-Time',  cls:'kaiser',   noMoon:false, note:'External rotation — verify moonlighting eligibility'},
+  'H. Elect':  {icon:'⚡',label:'Home Elective',     cls:'elect',    noMoon:false, note:'Elective rotation'},
+  'A. Elect':  {icon:'📚',label:'Away Elective',     cls:'elect',    noMoon:false, note:'Away elective — verify moonlighting eligibility'},
+  'SVED':      {icon:'🏨',label:'Stanford ED',       cls:'normal',   noMoon:false, note:'Standard ED rotation'},
+  'SNED':      {icon:'🌙',label:'Stanford Night ED', cls:'normal',   noMoon:false, note:'Night ED rotation'},
+  'KED':       {icon:'🏨',label:'Kaiser ED',         cls:'normal',   noMoon:false, note:'Kaiser ED rotation'},
+  'KNED':      {icon:'🌙',label:'Kaiser Night ED',   cls:'kned',     noMoon:false, note:'Kaiser Night ED rotation'},
+};
+
+function getDateObj(iso){ const[y,m,d]=iso.split('-').map(Number); return new Date(y,m-1,d); }
+
+function getRotationForDate(yr,mo,dy){
+  const d=new Date(yr,mo,dy);
+  for(const[start,end,rot] of ROTATION_SCHEDULE){
+    const s=getDateObj(start), e=getDateObj(end);
+    if(d>=s && d<=e) return rot;
+  }
+  return null;
+}
+
+function isVacationWeek(yr,mo){
+  // Check if the entire Mon-Sun week containing any day of this month is all vacation
+  // Actually check week-by-week whether entire week is vacation
+  const vacWeeks=ROTATION_SCHEDULE.filter(([s,e,r])=>r==='Vacation');
+  return vacWeeks.filter(([s,e])=>{
+    const sd=getDateObj(s), ed=getDateObj(e);
+    // Does this vacation week overlap with yr/mo?
+    return (sd.getFullYear()===yr&&sd.getMonth()===mo)||(ed.getFullYear()===yr&&ed.getMonth()===mo);
+  }).map(([s,e])=>({start:getDateObj(s),end:getDateObj(e)}));
+}
+
+function isOnJeopardy(yr,mo,dy){
+  const d=new Date(yr,mo,dy);
+  return JEOPARDY_PERIODS.some(([s,e])=>d>=getDateObj(s)&&d<=getDateObj(e));
+}
+
+function isVacationDay(yr,mo,dy){
+  const rot=getRotationForDate(yr,mo,dy);
+  return rot==='Vacation';
+}
+
+function dn(yr,mo,dy){return Math.floor(new Date(yr,mo,dy)/86400000);}
+function dayPrefix(yr,mo,dy){return `${yr}-${String(mo+1).padStart(2,'0')}-${String(dy).padStart(2,'0')}:`;}
+
+function parseIcal(text){
+  const shifts=[];
+  const unfolded=text.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,'');
+  unfolded.split('BEGIN:VEVENT').slice(1).forEach(b=>{
+    const get=k=>{const m=b.match(new RegExp(k+'[^:;]*(?:;[^:]*)?:([^\\r\\n]+)'));return m?m[1].trim():'';};
+    const dtstart=get('DTSTART'),dtend=get('DTEND');
+    const name=(get('SUMMARY')||'').replace(/\\,/g,',').replace(/\\n/g,' ').trim();
+    if(!dtstart||!name)return;
+    const parseDT=s=>{
+      const c=s.replace(/[-:]/g,'');
+      const yr=+c.slice(0,4),mo=+c.slice(4,6)-1,dy=+c.slice(6,8);
+      let hr=0;const tIdx=c.indexOf('T');if(tIdx>=0)hr=+c.slice(tIdx+1,tIdx+3)||0;
+      return{yr,mo,dy,hr};
+    };
+    const s=parseDT(dtstart),e=dtend?parseDT(dtend):null;
+    let endH=e?(e.dy>s.dy?e.hr+24:(e.hr===0&&e.dy===s.dy?24:e.hr)):s.hr+9;
+    if(endH===0)endH=24;
+    shifts.push({name,yr:s.yr,mo:s.mo,dy:s.dy,startH:s.hr,endH,night:s.hr>=22||(e&&e.dy>s.dy),dn:dn(s.yr,s.mo,s.dy)});
+  });
+  return shifts;
+}
+
+function shiftTime(s){
+  const fmt=n=>{const h=n%24;return h===0?'12am':h<12?h+'am':h===12?'12pm':(h-12)+'pm';};
+  if(!s.startH&&!s.endH)return '';
+  return `${fmt(s.startH)}–${fmt(s.endH>24?s.endH-24:s.endH)}${s.endH>24?' +1':''}`;
+}
+
+function getWorkedDays(){
+  const days=new Set();
+  allShifts.forEach(s=>days.add(s.dn));
+  Object.values(selected).forEach(v=>days.add(dn(v.yr,v.mo,v.dy)));
+  return days;
+}
+
+function wouldCreate7Consecutive(dayN){
+  const worked=getWorkedDays();
+  worked.add(dayN);
+  for(let start=dayN-6;start<=dayN;start++){
+    let consec=0;
+    for(let i=0;i<7;i++){if(worked.has(start+i))consec++;else break;}
+    if(consec>=7)return true;
+  }
+  return false;
+}
+
+function computeMonth(shifts,yr,mo){
+  const dim=new Date(yr,mo+1,0).getDate(),out=[];
+  for(let d=1;d<=dim;d++){
+    const dow=new Date(yr,mo,d).getDay(),dayN=dn(yr,mo,d);
+    const hasEM=shifts.some(s=>s.dn===dayN);
+    const isTue=dow===2;
+    const inSICU=[0,1,2,3].some(b=>shifts.some(s=>s.dn===dayN-b&&/sicu|icu/i.test(s.name)));
+    const onJeopardy=isOnJeopardy(yr,mo,d);
+    const onVacation=isVacationDay(yr,mo,d);
+    const rot=getRotationForDate(yr,mo,d);
+    const rotMeta=rot?ROTATION_META[rot]||null:null;
+    const rotBlocked=rotMeta&&rotMeta.noMoon;
+
+    if(hasEM||isTue||inSICU||onJeopardy||onVacation||rotBlocked){
+      let blockReason=null;
+      if(onVacation)blockReason='vacation';
+      else if(onJeopardy)blockReason='jeopardy';
+      else if(rotBlocked)blockReason=rot;
+      else if(inSICU)blockReason='sicu';
+      else if(hasEM)blockReason='shift';
+      else if(isTue)blockReason='tuesday';
+      out.push({d,dow,avail:[],blockReason,hasEM,rot});
+      continue;
+    }
+    const avail=[];
+    for(const ms of MOON){
+      const mS=dayN*24+ms.startH,mE=dayN*24+ms.endH;
+      let ok=true;
+      for(const em of shifts){
+        const eS=em.dn*24+em.startH,eE=em.dn*24+em.endH;
+        if(mS<eE+GAP&&mS>=eS){ok=false;break;}
+        if(mE>eS-GAP&&mE<=eS+ms.hrs+1){ok=false;break;}
+      }
+      if(ok)avail.push(ms);
+    }
+    out.push({d,dow,avail,blockReason:null,hasEM:false,rot});
+  }
+  return out;
+}
+
+let allShifts=[], viewYear=new Date().getFullYear(), viewMonth=new Date().getMonth();
+let selected={};
+
+function toggleShift(yr,mo,dy,msId){
+  const pfx=dayPrefix(yr,mo,dy);
+  const k=pfx+msId;
+  const already=Object.keys(selected).find(x=>x.startsWith(pfx));
+  if(already===k){delete selected[k];updateBar();renderContent();return;}
+  if(already)delete selected[already];
+  const dayN=dn(yr,mo,dy);
+  if(wouldCreate7Consecutive(dayN)){
+    alert('Selecting this shift would result in 7 consecutive working days, violating ACGME duty hour rules.');
+    return;
+  }
+  const ms=MOON.find(m=>m.id===msId);
+  selected[k]={yr,mo,dy,ms};
+  updateBar();renderContent();
+}
+
+function clearAll(){selected={};updateBar();renderContent();}
+
+function updateBar(){
+  const vals=Object.values(selected);
+  const total=vals.reduce((s,v)=>s+v.ms.pay,0);
+  document.getElementById('bar-count').textContent=`${vals.length} shift${vals.length!==1?'s':''} selected`;
+  document.getElementById('bar-earn').textContent=`$${total.toLocaleString()}`;
+  document.getElementById('bottom-bar').className=vals.length>0?'bottom-bar visible':'bottom-bar';
+}
+
+function submitToCalendar(){
+  const entries=Object.values(selected).sort((a,b)=>new Date(a.yr,a.mo,a.dy)-new Date(b.yr,b.mo,b.dy));
+  if(!entries.length)return;
+  const total=entries.reduce((s,e)=>s+e.ms.pay,0);
+  const pad=n=>String(n).padStart(2,'0');
+  let html=`<div class="card">
+    <div class="card-header"><span class="card-title">Add to Google Calendar</span><span class="card-sub sel">$${total.toLocaleString()} projected</span></div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1rem">Click <strong>+ Add</strong> for each shift to open Google Calendar pre-filled.</p>`;
+  entries.forEach(({yr,mo,dy,ms})=>{
+    const dow=new Date(yr,mo,dy).getDay();
+    const endDate=ms.endH>24?new Date(yr,mo,dy+1):new Date(yr,mo,dy);
+    const endH=ms.endH>24?ms.endH-24:ms.endH;
+    const start=`${yr}${pad(mo+1)}${pad(dy)}T${pad(ms.startH)}0000`;
+    const end=`${endDate.getFullYear()}${pad(endDate.getMonth()+1)}${pad(endDate.getDate())}T${pad(endH)}0000`;
+    const title=encodeURIComponent(`Moonlighting — ${ms.label.trim()} ($${ms.pay.toLocaleString()})`);
+    const details=encodeURIComponent(`Shift: ${ms.label.trim()}\nPay: $${ms.pay.toLocaleString()}\n\nLog hours in MedHub.`);
+    const gcUrl=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}`;
+    html+=`<div class="cal-item">
+      <div><div class="cal-date">${MS[mo]} ${dy} <span style="font-weight:400;color:var(--text3)">${DN[dow]}</span></div>
+      <div class="cal-shift">${ms.label.trim()}</div></div>
+      <div class="cal-right"><span class="cal-pay">$${ms.pay.toLocaleString()}</span><a class="add-btn" href="${gcUrl}" target="_blank">+ Add</a></div>
+    </div>`;
+  });
+  html+=`<div class="cal-total">
+    <span style="font-size:14px;color:var(--text2)">${entries.length} shift${entries.length!==1?'s':''}</span>
+    <span style="font-size:16px;font-weight:700;color:var(--green)">$${total.toLocaleString()} total</span>
+  </div></div>
+  <button class="btn btn-secondary" style="width:100%;margin-bottom:.5rem" onclick="backToMain()">← Back to schedule</button>`;
+  document.getElementById('root').innerHTML=html;
+  document.getElementById('month-nav').style.display='none';
+  document.getElementById('bottom-bar').className='bottom-bar';
+}
+
+function backToMain(){
+  document.getElementById('month-nav').style.display='flex';
+  updateBar();renderMonthNav();renderContent();
+}
+
+function getAvailableMonths(){
+  const months=new Set();
+  // Show all months from June 2026 through June 2027
+  for(let i=0;i<13;i++){
+    const d=new Date(2026,5+i,1);
+    months.add(`${d.getFullYear()}-${d.getMonth()}`);
+  }
+  return [...months].sort().map(k=>{const[y,m]=k.split('-');return{yr:+y,mo:+m};});
+}
+
+function renderMonthNav(){
+  const months=getAvailableMonths();
+  const nav=document.getElementById('month-nav');
+  nav.style.display='flex';
+  nav.innerHTML=months.map(({yr,mo})=>{
+    const isActive=yr===viewYear&&mo===viewMonth;
+    const hasData=allShifts.some(s=>s.yr===yr&&s.mo===mo);
+    return `<button class="month-btn ${isActive?'active':hasData?'':'empty'}" onclick="setMonth(${yr},${mo})">${MS[mo]}<br><span style="font-size:9px;opacity:.6">${yr}</span></button>`;
+  }).join('');
+}
+
+function setMonth(yr,mo){viewYear=yr;viewMonth=mo;renderMonthNav();renderContent();}
+
+function getMonthRotationSummary(yr,mo){
+  // Get dominant rotation for this month
+  const rotCounts={};
+  const dim=new Date(yr,mo+1,0).getDate();
+  for(let d=1;d<=dim;d++){
+    const r=getRotationForDate(yr,mo,d)||'Unknown';
+    rotCounts[r]=(rotCounts[r]||0)+1;
+  }
+  // Return all unique rotations
+  return Object.entries(rotCounts).sort((a,b)=>b[1]-a[1]).map(([r])=>r);
+}
+
+function renderContent(){
+  const yr=viewYear,mo=viewMonth;
+  const monthShifts=allShifts.filter(s=>s.yr===yr&&s.mo===mo).sort((a,b)=>a.dy-b.dy);
+  const days=computeMonth(allShifts,yr,mo);
+  const openDays=days.filter(d=>d.avail.length>0);
+  const hasSchedule=monthShifts.length>0;
+  const overnightDays=openDays.filter(d=>d.avail.some(m=>m.id==='on'));
+  const swingDays=openDays.filter(d=>d.avail.some(m=>m.id==='s1'||m.id==='s2'));
+  const maxEarn=openDays.reduce((s,d)=>s+d.avail.reduce((mx,ms)=>ms.pay>mx?ms.pay:mx,0),0);
+  const realON=Math.min(2,overnightDays.length),realSwing=Math.min(2,swingDays.length);
+  const realisticEarn=realON*ON_PAY+realSwing*SWING_PAY;
+  const monthSel=Object.values(selected).filter(v=>v.yr===yr&&v.mo===mo);
+  const selEarn=monthSel.reduce((s,v)=>s+v.ms.pay,0);
+
+  // Check month-level blocks
+  const dim=new Date(yr,mo+1,0).getDate();
+  const jeopardyDays=Array.from({length:dim},(_,i)=>i+1).filter(d=>isOnJeopardy(yr,mo,d));
+  const vacDays=Array.from({length:dim},(_,i)=>i+1).filter(d=>isVacationDay(yr,mo,d));
+  const rotations=getMonthRotationSummary(yr,mo);
+
+  let html='';
+
+  // Rotation banners
+  const uniqueRots=[...new Set(rotations)];
+  uniqueRots.forEach(rot=>{
+    const meta=ROTATION_META[rot];
+    if(!meta)return;
+    html+=`<div class="rotation-banner ${meta.cls}">
+      <span class="banner-icon">${meta.icon}</span>
+      <div class="banner-text"><strong>${meta.label}</strong><span>${meta.note}</span></div>
+    </div>`;
+  });
+
+  if(jeopardyDays.length>0){
+    html+=`<div class="rotation-banner jeopardy">
+      <span class="banner-icon">🚨</span>
+      <div class="banner-text"><strong>Jeopardy coverage</strong><span>Days ${jeopardyDays[0]}–${jeopardyDays[jeopardyDays.length-1]} blocked for moonlighting</span></div>
+    </div>`;
+  }
+
+  // Stats
+  html+=`<div class="card">
+    <div class="card-header"><span class="card-title">${MN[mo]} ${yr}</span><span class="card-sub">${monthShifts.length} EM shifts · ${openDays.length} open days</span></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n g">${openDays.length}</div><div class="stat-l">Open days</div></div>
+      <div class="stat"><div class="stat-n b">${overnightDays.length}</div><div class="stat-l">Overnight ok</div></div>
+      <div class="stat"><div class="stat-n b">${swingDays.length}</div><div class="stat-l">Swing ok</div></div>
+      <div class="stat"><div class="stat-n b">79</div><div class="stat-l">Hr cap</div></div>
+    </div>
+  </div>`;
+
+  // Two-column
+  html+=`<div class="two-col">`;
+
+  // LEFT — Clinical schedule
+  html+=`<div class="col-card"><div class="col-title">📋 Clinical schedule</div>`;
+  if(!hasSchedule){
+    html+=`<div class="empty-state">No shifts loaded for ${MN[mo]}</div>`;
+  } else {
+    monthShifts.forEach(s=>{
+      const dow=new Date(s.yr,s.mo,s.dy).getDay();
+      const time=shiftTime(s);
+      const rot=getRotationForDate(s.yr,s.mo,s.dy)||'';
+      html+=`<div class="sched-row">
+        <div><div class="sched-date">${MS[s.mo]} ${s.dy}</div><div class="sched-dow">${DN[dow]}</div></div>
+        <div class="sched-right"><div class="sched-name">${s.name}</div>${time?`<div class="sched-time">${time}</div>`:''}</div>
+      </div>`;
+    });
+  }
+  html+=`</div>`;
+
+  // RIGHT — Moonlighting
+  html+=`<div class="col-card">
+    <div class="col-title">
+      <span>🌙 Available to moonlight</span>
+      ${monthSel.length>0?`<span style="color:var(--green);font-weight:600;font-size:10px">${monthSel.length} · $${selEarn.toLocaleString()}</span>`:''}
+    </div>`;
+
+  if(!openDays.length&&!hasSchedule){
+    html+=`<div class="empty-state">No schedule loaded</div>`;
+  } else if(!openDays.length){
+    // Show why
+    const allJeopardy=jeopardyDays.length===dim;
+    const allVacation=vacDays.length===dim;
+    if(allJeopardy) html+=`<div class="empty-state">🚨 Full month on jeopardy</div>`;
+    else if(allVacation) html+=`<div class="empty-state">🏖 Vacation month</div>`;
+    else html+=`<div class="empty-state">No open moonlighting days this month</div>`;
+  } else {
+    openDays.forEach(({d,dow,avail})=>{
+      const dayN=dn(yr,mo,d);
+      const pfx=dayPrefix(yr,mo,d);
+      const selKey=Object.keys(selected).find(k=>k.startsWith(pfx));
+      const selMsId=selKey?selKey.split(':')[1]:null;
+      const selMs=selMsId?MOON.find(m=>m.id===selMsId):null;
+      const would7=!selMsId&&wouldCreate7Consecutive(dayN);
+
+      html+=`<div class="moon-row ${would7?'dim':''}">
+        <div class="moon-top">
+          <div><div class="moon-date">${MS[mo]} ${d}</div><div class="moon-dow">${DN[dow]}</div></div>
+          <div class="moon-pay ${selMs?'sel':''}">${selMs?`$${selMs.pay.toLocaleString()}`:''}</div>
+        </div>
+        <div class="pills-row">`;
+
+      avail.forEach(ms=>{
+        const isSel=selMsId===ms.id;
+        const isDisabled=would7&&!isSel;
+        html+=`<span class="shift-pill ${ms.cls}${isSel?' sel':''}${isDisabled?' disabled':''}"
+          onclick="${isDisabled?'':'toggleShift('+yr+','+mo+','+d+',\''+ms.id+'\')'}"
+          title="${isDisabled?'Would create 7 consecutive days':ms.label.trim()}"
+        >${ms.label}</span>`;
+      });
+
+      html+=`</div>`;
+      if(would7) html+=`<div class="block-reason">⚠ 7-consecutive-day limit</div>`;
+      html+=`</div>`;
+    });
+  }
+  html+=`</div></div>`; // end two-col
+
+  // Earnings
+  if(openDays.length>0){
+    html+=`<div class="card">
+      <div class="card-header"><span class="card-title">Earnings potential</span></div>
+      <div class="earn-grid">
+        <div class="earn-card"><div class="earn-label">Maximum possible</div><div class="earn-amount">$${maxEarn.toLocaleString()}</div><div class="earn-desc">Best shift every open day</div></div>
+        <div class="earn-card"><div class="earn-label">Realistic estimate</div><div class="earn-amount">$${realisticEarn.toLocaleString()}</div><div class="earn-desc">${realON} overnight${realON!==1?'s':''} + ${realSwing} swing${realSwing!==1?'s':''}</div></div>
+      </div>
+      <hr class="earn-divider">
+      <div class="earn-note">💰 Swing 1 &amp; 2: <strong>$1,200/shift</strong> &nbsp;·&nbsp; Overnight: <strong>$3,500/shift</strong><br>⚠️ Max 24 hrs/week · 79 hrs/month cap</div>
+    </div>`;
+  }
+
+  // Rules
+  html+=`<div class="card">
+    <div class="card-header"><span class="card-title">Rules applied</span></div>
+    <div class="rule"><span style="color:var(--red);min-width:14px">✕</span>No same-day moonlighting</div>
+    <div class="rule"><span style="color:var(--red);min-width:14px">✕</span>9-hour gap before and after every EM shift (overnight ends 7am — blocked if next EM starts before 4pm)</div>
+    <div class="rule"><span style="color:var(--red);min-width:14px">✕</span>No Tuesday evening moonlighting</div>
+    <div class="rule"><span style="color:var(--red);min-width:14px">✕</span>SICU/ICU/CVICU rotation = no moonlighting</div>
+    <div class="rule"><span style="color:var(--red);min-width:14px">✕</span>Vacation weeks = no internal moonlighting</div>
+    <div class="rule"><span style="color:var(--red);min-width:14px">✕</span>Jeopardy periods blocked: 8/17–8/30, 9/7–9/20, 3/29–4/11</div>
+    <div class="rule"><span style="color:var(--red);min-width:14px">✕</span>No 7 consecutive working days — dynamically blocked as you select shifts</div>
+    <div class="rule"><span style="color:var(--amber);min-width:14px">⚠</span>Max 24 hrs/week · 79 hrs/month including external consulting</div>
+    <div class="rule"><span style="color:var(--green);min-width:14px">✓</span>Swing 1: 3–9 pm ($1,200) · Swing 2: 5–11 pm ($1,200) · Overnight: 7 pm–7 am ($3,500)</div>
+  </div>`;
+
+  document.getElementById('root').innerHTML=html;
+}
+
+async function init(){
+  document.getElementById('root').innerHTML='<div class="loader"><div class="spin"></div>Fetching your schedule…</div>';
+  document.getElementById('month-nav').style.display='none';
+  try{
+    const r=await fetch('/api/schedule',{signal:AbortSignal.timeout(10000)});
+    if(!r.ok)throw new Error(`Server error ${r.status}`);
+    const text=await r.text();
+    if(!text.includes('BEGIN:VCALENDAR'))throw new Error('Unexpected: '+text.slice(0,200));
+    allShifts=parseIcal(text);
+    const now=new Date();
+    viewYear=now.getFullYear();viewMonth=now.getMonth();
+    renderMonthNav();renderContent();
+    document.getElementById('updated').textContent=`Updated ${now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+  }catch(e){
+    document.getElementById('root').innerHTML=`<div class="card"><div class="err">${e.message}</div></div>`;
+  }
+}
+init();
+</script>
+</body>
+</html>
